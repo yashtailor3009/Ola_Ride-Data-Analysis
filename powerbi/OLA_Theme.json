@@ -1,0 +1,33 @@
+{
+  "name": "Ola Ride Insights",
+  "dataColors": ["#0F1A17", "#C6E22A", "#1F9D6B", "#F2A93B", "#E4572E", "#3D5A80", "#8E7DBE", "#2A9D8F", "#6B7A99", "#C9D2CC"],
+  "background": "#FFFFFF",
+  "foreground": "#0F1A17",
+  "tableAccent": "#1F9D6B",
+  "good": "#1F9D6B",
+  "neutral": "#F2A93B",
+  "bad": "#E4572E",
+  "maximum": "#0F1A17",
+  "center": "#C9D2CC",
+  "minimum": "#F4F6F1",
+  "textClasses": {
+    "callout": {"fontSize": 28, "fontFace": "Segoe UI Semibold", "color": "#0F1A17"},
+    "title": {"fontSize": 12, "fontFace": "Segoe UI Semibold", "color": "#0F1A17"},
+    "header": {"fontSize": 12, "fontFace": "Segoe UI Semibold", "color": "#0F1A17"},
+    "label": {"fontSize": 10, "fontFace": "Segoe UI", "color": "#5E6B66"}
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [{"show": true, "fontColor": {"solid": {"color": "#0F1A17"}}, "fontSize": 12}],
+        "background": [{"show": true, "color": {"solid": {"color": "#FFFFFF"}}, "transparency": 0}],
+        "border": [{"show": true, "color": {"solid": {"color": "#E3E8DF"}}, "radius": 12}]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [{"color": {"solid": {"color": "#F4F6F1"}}, "transparency": 0}]
+      }
+    }
+  }
+}

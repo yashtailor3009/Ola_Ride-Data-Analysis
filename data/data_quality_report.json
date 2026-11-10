@@ -1,0 +1,56 @@
+{
+  "rows_raw": 103024,
+  "rows_clean": 103024,
+  "columns_raw": 19,
+  "columns_clean": 33,
+  "date_range": [
+    "2024-07-01",
+    "2024-07-31"
+  ],
+  "unique_customers": 94544,
+  "unique_pickup_locations": 50,
+  "validation_rules_violations": {
+    "duplicate_booking_id": 0,
+    "missing_key_fields": 0,
+    "unknown_status": 0,
+    "unknown_vehicle": 0,
+    "success_missing_rating_or_payment": 0,
+    "failed_with_rating_or_payment": 0,
+    "failed_with_distance": 0,
+    "success_with_zero_distance": 0,
+    "customer_cancel_reason_mismatch": 0,
+    "driver_cancel_reason_mismatch": 0,
+    "incomplete_flag_outside_success": 0,
+    "incomplete_reason_mismatch": 0,
+    "rating_out_of_range": 0,
+    "non_positive_booking_value": 0,
+    "dates_outside_july_2024": 0
+  },
+  "all_rules_pass": true,
+  "structural_nulls": {
+    "V_TAT": 39057,
+    "C_TAT": 39057,
+    "Canceled_Rides_by_Customer": 92525,
+    "Canceled_Rides_by_Driver": 84590,
+    "Incomplete_Rides": 39057,
+    "Incomplete_Rides_Reason": 99098,
+    "Payment_Method": 39057,
+    "Driver_Ratings": 39057,
+    "Customer_Rating": 39057
+  },
+  "cleaning_decisions": [
+    "Literal 'null' strings converted to NaN/NULL at read time.",
+    "Nulls are structural (depend on booking status) and were deliberately NOT imputed.",
+    "Date column split into Date (calendar date), Time (HH:MM:SS) and Booking_Datetime.",
+    "Text columns trimmed; categories already consistent (no spelling variants found).",
+    "Helper column 'Vehicle Images' (XLOOKUP) dropped; icons kept in config.VEHICLE_ICONS.",
+    "14 derived columns added (calendar, outcome flags, fare/km, distance band, rating gap)."
+  ],
+  "caveats": [
+    "Booking_Value on failed bookings is the quoted fare, not revenue; revenue = Success only.",
+    "Ride_Distance is 0 for every non-completed booking, so distance averages are reported both over all bookings (matches the workbook's AVERAGEIF) and over completed rides only.",
+    "V_TAT / C_TAT units are not documented in the source; they are used as relative measures.",
+    "Dataset covers a single month (July 2024): month-over-month trends cannot be computed.",
+    "Distributions are unusually uniform (hour, weekday, location, rating, fare). Findings should be re-validated on production data before operational decisions."
+  ]
+}

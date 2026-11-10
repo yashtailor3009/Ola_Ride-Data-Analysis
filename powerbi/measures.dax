@@ -1,0 +1,127 @@
+// =============================================================================
+//  OLA RIDE INSIGHTS - DAX MEASURES
+//  Table name assumed: ola_rides   (columns exactly as in ola_rides_clean.csv.gz)
+//  Create a "_Measures" table (Enter data > blank) and add each measure to it.
+//  Every measure is annotated with the expected value for the full July dataset
+//  so you can verify the report against the SQL and Streamlit results.
+// =============================================================================
+
+// ---------- Date table (Modeling > New table) --------------------------------
+// Relate DimDate[Date] (1) -> ola_rides[Date] (*), single direction.
+DimDate =
+ADDCOLUMNS (
+    CALENDAR ( DATE ( 2024, 7, 1 ), DATE ( 2024, 7, 31 ) ),
+    "Day Name", FORMAT ( [Date], "dddd" ),
+    "Day No", WEEKDAY ( [Date], 2 ),
+    "Is Weekend", IF ( WEEKDAY ( [Date], 2 ) >= 6, 1, 0 )
+)
+
+// ---------- Volume & outcomes -------------------------------------------------
+Total Bookings = COUNTROWS ( ola_rides )                                   // 103,024
+
+Successful Bookings =
+CALCULATE ( COUNTROWS ( ola_rides ), ola_rides[Booking_Status] = "Success" )   // 63,967
+
+Cancelled by Customer =
+CALCULATE ( COUNTROWS ( ola_rides ), ola_rides[Booking_Status] = "Canceled by Customer" )   // 10,499
+
+Cancelled by Driver =
+CALCULATE ( COUNTROWS ( ola_rides ), ola_rides[Booking_Status] = "Canceled by Driver" )     // 18,434
+
+Driver Not Found =
+CALCULATE ( COUNTROWS ( ola_rides ), ola_rides[Booking_Status] = "Driver Not Found" )       // 10,124
+
+Success Rate % = DIVIDE ( [Successful Bookings], [Total Bookings] )        // 62.1%
+Customer Cancel Rate % = DIVIDE ( [Cancelled by Customer], [Total Bookings] )   // 10.2%
+Driver Cancel Rate % = DIVIDE ( [Cancelled by Driver], [Total Bookings] )       // 17.9%
+Driver-side Failure Rate % = DIVIDE ( [Cancelled by Driver] + [Driver Not Found], [Total Bookings] )   // 27.7%
+
+Avg Bookings per Day = DIVIDE ( [Total Bookings], DISTINCTCOUNT ( ola_rides[Date] ) )   // ~3,323
+
+Bookings 7d Avg =
+AVERAGEX (
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -7, DAY ),
+    [Total Bookings]
+)
+
+// ---------- Revenue -----------------------------------------------------------
+Revenue =
+CALCULATE ( SUM ( ola_rides[Booking_Value] ), ola_rides[Booking_Status] = "Success" )   // 35,080,467
+
+Quoted Fare Lost =
+CALCULATE ( SUM ( ola_rides[Booking_Value] ), ola_rides[Booking_Status] <> "Success" )  // 21,454,147
+
+Potential Booking Value = SUM ( ola_rides[Booking_Value] )                 // 56,534,614
+
+Leakage % = DIVIDE ( [Quoted Fare Lost], [Potential Booking Value] )       // 37.9%
+
+Recover 10% Scenario = 0.1 * [Quoted Fare Lost]                            // 2,145,415
+
+Avg Fare (Completed) =
+CALCULATE ( AVERAGE ( ola_rides[Booking_Value] ), ola_rides[Booking_Status] = "Success" )   // ~548
+
+Cash Share of Revenue % =
+DIVIDE ( CALCULATE ( [Revenue], ola_rides[Payment_Method] = "Cash" ), [Revenue] )   // 54.9%
+
+Digital Share of Revenue % = 1 - [Cash Share of Revenue %]                 // 45.1%
+
+// ---------- Distance & pricing -------------------------------------------------
+Avg Distance (Completed km) =
+CALCULATE ( AVERAGE ( ola_rides[Ride_Distance] ), ola_rides[Booking_Status] = "Success" )   // ~22.9
+
+Avg Distance (All Bookings km) = AVERAGE ( ola_rides[Ride_Distance] )      // matches the workbook's AVERAGEIF (cancelled rides count as 0 km)
+
+Total Distance (Completed km) =
+CALCULATE ( SUM ( ola_rides[Ride_Distance] ), ola_rides[Booking_Status] = "Success" )
+
+Fare per km = DIVIDE ( [Revenue], [Total Distance (Completed km)] )
+
+// ---------- Ratings -----------------------------------------------------------
+Avg Customer Rating = AVERAGE ( ola_rides[Customer_Rating] )               // ~4.00
+Avg Driver Rating   = AVERAGE ( ola_rides[Driver_Ratings] )                // ~4.00
+Low Customer Rating % =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( ola_rides ), ola_rides[Customer_Rating] <= 3.5 ),
+    CALCULATE ( COUNTROWS ( ola_rides ), NOT ISBLANK ( ola_rides[Customer_Rating] ) )
+)                                                                          // ~27.6%
+
+// ---------- Incomplete rides ---------------------------------------------------
+Incomplete Rides =
+CALCULATE ( COUNTROWS ( ola_rides ), ola_rides[Incomplete_Rides] = "Yes" )  // 3,926
+
+Incomplete Value at Risk =
+CALCULATE ( SUM ( ola_rides[Booking_Value] ), ola_rides[Incomplete_Rides] = "Yes" )   // 2,250,482
+
+// ---------- Customers ----------------------------------------------------------
+Unique Customers = DISTINCTCOUNT ( ola_rides[Customer_ID] )                // 94,544
+
+Repeat Customers =
+COUNTROWS (
+    FILTER (
+        ADDCOLUMNS ( VALUES ( ola_rides[Customer_ID] ), "n", CALCULATE ( COUNTROWS ( ola_rides ) ) ),
+        [n] >= 2
+    )
+)                                                                          // 7,954  (8.4%)
+
+Customers Never Completed =
+COUNTROWS (
+    FILTER (
+        ADDCOLUMNS ( VALUES ( ola_rides[Customer_ID] ), "ok", CALCULATE ( SUM ( ola_rides[Is_Successful] ) ) ),
+        [ok] = 0
+    )
+)                                                                          // 34,557  (36.6%)
+
+Never Completed % = DIVIDE ( [Customers Never Completed], [Unique Customers] )
+
+// ---------- Anomaly flags (use as card visuals) ----------------------------------
+Same Pickup and Drop = CALCULATE ( COUNTROWS ( ola_rides ), ola_rides[Is_Same_Pickup_Drop] = 1 )   // 2,121
+
+Extreme Fare per km (>500) =
+CALCULATE ( COUNTROWS ( ola_rides ), ola_rides[Fare_Per_Km] > 500 )          // 889
+
+AC Complaint on Non-AC Vehicle =
+CALCULATE (
+    COUNTROWS ( ola_rides ),
+    ola_rides[Canceled_Rides_by_Customer] = "AC is Not working",
+    ola_rides[Vehicle_Type] IN { "Bike", "eBike", "Auto" }
+)                                                                          // 686
