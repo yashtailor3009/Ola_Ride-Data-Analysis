@@ -61,6 +61,24 @@ CSS = f"""
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 html, body, .stApp, [class*="st-"] {{ font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif; }}
+
+
+/* Fix Streamlit sidebar toggle icons */
+[data-testid="stIconMaterial"] {{
+    font-family: "Material Symbols Rounded" !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+    direction: ltr !important;
+    font-feature-settings: "liga";
+    -webkit-font-feature-settings: "liga";
+    -webkit-font-smoothing: antialiased;
+}}
+
 .stApp {{ background: {cfg.PAPER}; color: {cfg.INK}; }}
 .block-container {{ padding-top: 1.4rem; padding-bottom: 3rem; max-width: 1380px; }}
 

@@ -1,11 +1,13 @@
+
 __pycache__/
 *.pyc
 .venv/
+**/.venv/
 .env
 .streamlit/secrets.toml
 .ipynb_checkpoints/
 .pytest_cache/
 *.db
-# keep the cleaned data in git; ignore the (large) raw workbook
+# Keep cleaned data in git; ignore the large raw workbook
 OLA_DataSet.xlsx
 .DS_Store
